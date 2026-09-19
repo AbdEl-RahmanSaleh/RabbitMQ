@@ -18,7 +18,7 @@ namespace Producer.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> SendMessage([FromBody]FirstDemoMessage message)
+        public async Task<ActionResult> SendMessage([FromBody]CompetingConsumersMessage message)
         {
             try
             {

@@ -1,5 +1,6 @@
 ﻿using RabbitMQ.Client;
 using Shared.Configurations;
+using Shared.Messages;
 using System.Text;
 using System.Text.Json;
 
@@ -21,7 +22,7 @@ namespace Producer.Services
                 Password = _configuration.Password,
             };
         }
-        public void publish<T>(T message)
+        public void publish(CompetingConsumersMessage message)
         {
             using var connection =  _factory.CreateConnection();
             using var channel =  connection.CreateModel();
@@ -36,18 +37,22 @@ namespace Producer.Services
                                             arguments:null);
 
 
-            var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
+            for (int i = 0; i < 5; i++)
+            {
 
+                message.Id = i;
+                var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
+                // Exchange name is empty string it means it's a default exchange (deprecated from RabbitMQ 4 and up )
+                // the routing key in the default exchanege between the exchange and the queue is the queue name 
 
+                 channel.BasicPublish(exchange:"",
+                        routingKey:_configuration.QueueName,
+                        basicProperties:null,
+                        body:body,
+                        mandatory:true);
 
-             // Exchange name is empty string it means it's a default exchange (deprecated from RabbitMQ 4 and up )
-             // the routing key in the default exchanege between the exchange and the queue is the queue name 
+            }
 
-             channel.BasicPublish(exchange:"",
-                    routingKey:_configuration.QueueName,
-                    basicProperties:null,
-                    body:body,
-                    mandatory:true);
 
             
             
