@@ -1,0 +1,18 @@
+[
+  {
+    "ContainingType": "Producer.Controllers.SenderController",
+    "Method": "SendMessage",
+    "RelativePath": "api/Sender",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "message",
+        "Type": "Shared.Messages.FirstDemoMessage",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  }
+]
