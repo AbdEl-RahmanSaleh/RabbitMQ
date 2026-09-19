@@ -1,1 +1,7 @@
 .vs/
+/Consumer/bin
+/Consumer/obj
+/Producer/bin
+/Producer/obj
+/Shared/bin
+/Shared/obj
