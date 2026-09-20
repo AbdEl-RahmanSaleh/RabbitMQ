@@ -26,32 +26,21 @@ namespace Producer.Services
             using var connection =  _factory.CreateConnection();
             using var channel =  connection.CreateModel();
 
-             channel.QueueDeclare(queue: _configuration.QueueName,
-                                            // durable if true means : the queue will be saved on the hard disk so if the server restart the messages will not deleted
-                                            durable: false,
-                                            // exclusive if true : means this queue is exclusive for this connection so if the connection closes the queue will be deleted
-                                            exclusive: false,
-                                            // autoDelete if true : means when the last consumer unsbscribe delete the queue
-                                            autoDelete:false,
-                                            arguments:null);
-
+            
 
             var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
 
 
+            channel.ExchangeDeclare(exchange : _configuration.ExchangeName, type: ExchangeType.Fanout);
 
-             // Exchange name is empty string it means it's a default exchange (deprecated from RabbitMQ 4 and up )
-             // the routing key in the default exchanege between the exchange and the queue is the queue name 
+             
+            // Exchange name is empty string it means it's a default exchange (deprecated from RabbitMQ 4 and up )
+            // the routing key in the default exchanege between the exchange and the queue is the queue name 
 
-             channel.BasicPublish(exchange:"",
-                    routingKey:_configuration.QueueName,
+            channel.BasicPublish(exchange:_configuration.ExchangeName,
+                    routingKey:"",
                     basicProperties:null,
-                    body:body,
-                    mandatory:true);
-
-            
-            
-
+                    body:body);
 
         }
     }

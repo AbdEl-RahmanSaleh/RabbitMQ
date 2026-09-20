@@ -4,16 +4,15 @@ using RabbitMQ.Client.Events;
 using Shared.Configurations;
 using System.Text;
 
-namespace Consumer
+namespace Consumer2
 {
     internal class Program
     {
         static void Main(string[] args)
         {
-
             var configuration = new ConfigurationBuilder()
-                .SetBasePath(AppContext.BaseDirectory)
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true).Build();
+                            .SetBasePath(AppContext.BaseDirectory)
+                            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true).Build();
 
             var rabbitmqConfig = configuration.GetSection(nameof(RabbitMQConfiguration)).Get<RabbitMQConfiguration>();
 
@@ -28,25 +27,27 @@ namespace Consumer
             using var connection = factory.CreateConnection();
             using var channel = connection.CreateModel();
 
-            channel.QueueDeclare(queue: rabbitmqConfig.QueueName,
-                                           durable: false,
-                                           exclusive: false,
-                                           autoDelete: false,
-                                           arguments: null);
 
+            channel.ExchangeDeclare(exchange: rabbitmqConfig.ExchangeName, type: ExchangeType.Fanout);
+
+            //Declare a Temp queue and bind it to the exchange 
+            //Temp Queue will be deleted when the consumer disconnects
+
+            var queuename = channel.QueueDeclare().QueueName;
+
+            channel.QueueBind(queue: queuename, exchange: rabbitmqConfig.ExchangeName, routingKey: "");
             var consumer = new EventingBasicConsumer(channel);
 
             consumer.Received += (sender, args) =>
             {
                 var body = args.Body.ToArray();
                 var message = Encoding.UTF8.GetString(body);
-                Console.WriteLine($"Message Received : {message}");
+                Console.WriteLine($"Second Consumer :  Message Received : {message}");
 
             };
-            channel.BasicConsume(queue:rabbitmqConfig.QueueName , autoAck : true,consumer:consumer);
+            channel.BasicConsume(queue: queuename, autoAck: true, consumer: consumer);
 
             Console.ReadLine();
-
         }
     }
 }
