@@ -31,7 +31,7 @@ namespace Producer.Services
             var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
 
 
-            channel.ExchangeDeclare(exchange : _configuration.ExchangeName, type: ExchangeType.Direct);
+            channel.ExchangeDeclare(exchange : _configuration.ExchangeName, type: ExchangeType.Topic);
 
              
             // Exchange name is empty string it means it's a default exchange (deprecated from RabbitMQ 4 and up )

@@ -28,7 +28,7 @@ namespace Consumer1
             using var channel = connection.CreateModel();
 
 
-            channel.ExchangeDeclare(exchange: rabbitmqConfig.ExchangeName, type: ExchangeType.Direct);
+            channel.ExchangeDeclare(exchange: rabbitmqConfig.ExchangeName, type: ExchangeType.Topic);
 
             //Declare a Temp queue and bind it to the exchange 
             //Temp Queue will be deleted when the consumer disconnects
