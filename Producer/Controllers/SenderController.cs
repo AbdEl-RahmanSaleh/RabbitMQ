@@ -18,11 +18,11 @@ namespace Producer.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> SendMessage([FromBody]FirstDemoMessage message)
+        public async Task<ActionResult> SendMessage([FromBody]FirstDemoMessage message,string bindingKey)
         {
             try
             {
-                _rabbitmqService.publish(message);
+                _rabbitmqService.publish(message,bindingKey);
                 return Ok("Message Sent Successfully");
             }
             catch (Exception ex)

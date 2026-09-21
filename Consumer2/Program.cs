@@ -28,14 +28,14 @@ namespace Consumer2
             using var channel = connection.CreateModel();
 
 
-            channel.ExchangeDeclare(exchange: rabbitmqConfig.ExchangeName, type: ExchangeType.Fanout);
+            channel.ExchangeDeclare(exchange: rabbitmqConfig.ExchangeName, type: ExchangeType.Direct);
 
             //Declare a Temp queue and bind it to the exchange 
             //Temp Queue will be deleted when the consumer disconnects
 
             var queuename = channel.QueueDeclare().QueueName;
 
-            channel.QueueBind(queue: queuename, exchange: rabbitmqConfig.ExchangeName, routingKey: "");
+            channel.QueueBind(queue: queuename, exchange: rabbitmqConfig.ExchangeName, routingKey: rabbitmqConfig.BindingKey);
             var consumer = new EventingBasicConsumer(channel);
 
             consumer.Received += (sender, args) =>

@@ -21,7 +21,7 @@ namespace Producer.Services
                 Password = _configuration.Password,
             };
         }
-        public void publish<T>(T message)
+        public void publish<T>(T message,string routingKey)
         {
             using var connection =  _factory.CreateConnection();
             using var channel =  connection.CreateModel();
@@ -31,14 +31,14 @@ namespace Producer.Services
             var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
 
 
-            channel.ExchangeDeclare(exchange : _configuration.ExchangeName, type: ExchangeType.Fanout);
+            channel.ExchangeDeclare(exchange : _configuration.ExchangeName, type: ExchangeType.Direct);
 
              
             // Exchange name is empty string it means it's a default exchange (deprecated from RabbitMQ 4 and up )
             // the routing key in the default exchanege between the exchange and the queue is the queue name 
 
             channel.BasicPublish(exchange:_configuration.ExchangeName,
-                    routingKey:"",
+                    routingKey: routingKey,
                     basicProperties:null,
                     body:body);
 
