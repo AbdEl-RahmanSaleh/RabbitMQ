@@ -28,14 +28,19 @@ namespace Consumer1
             using var channel = connection.CreateModel();
 
 
-            channel.ExchangeDeclare(exchange: rabbitmqConfig.ExchangeName, type: ExchangeType.Topic);
+            channel.ExchangeDeclare(exchange: rabbitmqConfig.ExchangeName, type: ExchangeType.Headers);
 
             //Declare a Temp queue and bind it to the exchange 
             //Temp Queue will be deleted when the consumer disconnects
 
             var queuename = channel.QueueDeclare().QueueName;
-
-            channel.QueueBind(queue: queuename, exchange: rabbitmqConfig.ExchangeName, routingKey: rabbitmqConfig.BindingKey);
+            var bindingArguments = new Dictionary<string, object>()
+            {
+                {"x-match", "all" },
+                {"name", "Ahmed" },
+                {"age", 25 }
+            };
+            channel.QueueBind(queue: queuename, exchange: rabbitmqConfig.ExchangeName, routingKey: "", arguments: bindingArguments);
             var consumer = new EventingBasicConsumer(channel);
 
             consumer.Received += (sender, args) =>
