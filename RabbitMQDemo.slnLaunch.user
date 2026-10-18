@@ -3,15 +3,11 @@
     "Name": "New Profile",
     "Projects": [
       {
-        "Path": "Producer\\Producer.csproj",
+        "Path": "Client\\Client.csproj",
         "Action": "Start"
       },
       {
-        "Path": "Consumer1\\Consumer1.csproj",
-        "Action": "Start"
-      },
-      {
-        "Path": "Consumer2\\Consumer2.csproj",
+        "Path": "Server\\Server.csproj",
         "Action": "Start"
       }
     ]
