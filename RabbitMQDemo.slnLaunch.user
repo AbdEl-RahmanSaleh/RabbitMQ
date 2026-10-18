@@ -11,5 +11,18 @@
         "Action": "Start"
       }
     ]
+  },
+  {
+    "Name": "New Profile",
+    "Projects": [
+      {
+        "Path": "Client\\Consumer.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "Server\\Producer.csproj",
+        "Action": "Start"
+      }
+    ]
   }
 ]

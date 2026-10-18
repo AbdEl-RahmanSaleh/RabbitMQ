@@ -27,32 +27,46 @@ namespace Consumer
             using var connection = factory.CreateConnection();
             using var channel = connection.CreateModel();
 
-            var replyQueue = channel.QueueDeclare(queue: "", exclusive: true);
-            channel.QueueDeclare(queue: rabbitmqConfig.QueueName, exclusive: false);
+            channel.ExchangeDeclare(exchange:rabbitmqConfig.ExchangeName, type: ExchangeType.Direct);
 
 
+            channel.ExchangeDeclare(exchange:rabbitmqConfig.DLExchangeName, type: ExchangeType.Fanout);
 
-            var consumer = new EventingBasicConsumer(channel);
 
-            consumer.Received += (sender, args) =>
+            var argument = new Dictionary<string, object>
             {
-                var body = args.Body.ToArray();
-                var message = Encoding.UTF8.GetString(body);
-                Console.WriteLine($"Client Reply Received :  {message}");
-
+                { "x-dead-letter-exchange", rabbitmqConfig.DLExchangeName },
+                {"x-message-ttl", 1000 }
             };
-            channel.BasicConsume(queue: replyQueue.QueueName, autoAck: true, consumer: consumer);
-            
-            var properties = channel.CreateBasicProperties();
-            properties.ReplyTo = replyQueue.QueueName;
-            properties.CorrelationId = Guid.NewGuid().ToString();
 
-            var message = "Hello from Client!";
-            var body = Encoding.UTF8.GetBytes(message);
+            channel.QueueDeclare(queue: rabbitmqConfig.QueueName, durable: true, exclusive: false, autoDelete: false, arguments: argument); 
+            channel.QueueBind(queue: rabbitmqConfig.QueueName, exchange: rabbitmqConfig.ExchangeName, routingKey: "");
 
-            Console.WriteLine($"Client Sending Request: {message}\n{properties.CorrelationId}");
+            var mainConsumer = new EventingBasicConsumer(channel);
 
-            channel.BasicPublish("", rabbitmqConfig.QueueName, properties, body);
+            mainConsumer.Received += (model, ea) =>
+            {
+                var body = ea.Body.ToArray();
+                var message = Encoding.UTF8.GetString(body);
+                Console.WriteLine($"Main - Received new Message : {message}");
+            };
+
+            //channel.BasicConsume(queue: rabbitmqConfig.QueueName, autoAck: true, consumer: mainConsumer);
+
+            channel.QueueDeclare(queue: rabbitmqConfig.DLXQueueName);
+            channel.QueueBind(queue: rabbitmqConfig.DLXQueueName, exchange: rabbitmqConfig.DLExchangeName, routingKey: "");
+
+            var dlxConsumer = new EventingBasicConsumer(channel);
+
+            dlxConsumer.Received += (model, ea) =>
+            {
+                var body = ea.Body.ToArray();
+                var message = Encoding.UTF8.GetString(body);
+                Console.WriteLine($"DLX - Received new Message : {message}");
+            };
+
+            channel.BasicConsume(queue: rabbitmqConfig.DLXQueueName, autoAck: true, consumer: dlxConsumer);
+            Console.WriteLine("Consuming messages...");
             Console.ReadLine();
         }
     }

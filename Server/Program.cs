@@ -27,22 +27,14 @@ namespace Producer
             using var connection = factory.CreateConnection();
             using var channel = connection.CreateModel();
 
-            channel.QueueDeclare(queue: rabbitmqConfig.QueueName, exclusive: false);
+            channel.ExchangeDeclare(exchange: rabbitmqConfig.ExchangeName, type: ExchangeType.Direct);
+            
+            var message = "Hello from Producer!";
+            var body = Encoding.UTF8.GetBytes(message);
 
+            channel.BasicPublish(rabbitmqConfig.ExchangeName, "", null,body);
 
-            var consumer = new EventingBasicConsumer(channel);
-
-            consumer.Received += (sender, args) =>
-            {
-                var body = args.Body.ToArray();
-                var message = Encoding.UTF8.GetString(body);
-                Console.WriteLine($"Server Received Request : {message}\n{args.BasicProperties.CorrelationId}");
-                var replyMessage = $"Reply from Server : {DateTime.Now}\n{args.BasicProperties.CorrelationId}";
-                var replyBody = Encoding.UTF8.GetBytes(replyMessage);
-                channel.BasicPublish("", args.BasicProperties.ReplyTo, null, replyBody);
-            };
-
-            channel.BasicConsume(queue: rabbitmqConfig.QueueName, autoAck: true, consumer: consumer);
+            Console.WriteLine($"Send Message : {message}");
 
             Console.ReadLine();
         }
