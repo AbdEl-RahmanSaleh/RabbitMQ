@@ -4,7 +4,7 @@ using RabbitMQ.Client.Events;
 using Shared.Configurations;
 using System.Text;
 
-namespace Server
+namespace Producer
 {
     internal class Program
     {

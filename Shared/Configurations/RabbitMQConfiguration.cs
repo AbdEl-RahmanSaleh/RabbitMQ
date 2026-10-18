@@ -7,4 +7,7 @@ public class RabbitMQConfiguration
     public string Username { get; set; }
     public string Password { get; set; }
     public string QueueName { get; set; }
+    public string ExchangeName { get; set; }
+    public string DLExchangeName { get; set; }
+    public string DLXQueueName { get; set; }
 }
