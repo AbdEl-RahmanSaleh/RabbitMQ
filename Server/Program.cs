@@ -27,12 +27,15 @@ namespace Producer
             using var connection = factory.CreateConnection();
             using var channel = connection.CreateModel();
 
-            channel.ExchangeDeclare(exchange: rabbitmqConfig.ExchangeName, type: ExchangeType.Direct);
+            channel.ExchangeDeclare(exchange: rabbitmqConfig.FirstExchangeName, type: ExchangeType.Direct);
+            channel.ExchangeDeclare(exchange: rabbitmqConfig.SecondExchangeName, type: ExchangeType.Fanout);
             
+            channel.ExchangeBind(destination: rabbitmqConfig.SecondExchangeName, source: rabbitmqConfig.FirstExchangeName, routingKey: "");
+
             var message = "Hello from Producer!";
             var body = Encoding.UTF8.GetBytes(message);
 
-            channel.BasicPublish(rabbitmqConfig.ExchangeName, "", null,body);
+            channel.BasicPublish(rabbitmqConfig.FirstExchangeName, "", null,body);
 
             Console.WriteLine($"Send Message : {message}");
 
