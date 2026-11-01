@@ -1,4 +1,4 @@
-
+using MassTransit;
 using Producer.Services;
 using Shared.Configurations;
 
@@ -19,8 +19,23 @@ namespace Producer
 
             var rabbitmqConfig = builder.Configuration.GetSection(nameof(RabbitMQConfiguration)).Get<RabbitMQConfiguration>();
 
-            builder.Services.AddSingleton(rabbitmqConfig);
-            builder.Services.AddScoped<IRabbitMQService,RabbitMQService>();
+            builder.Services.AddMassTransit(options =>
+            {
+                options.UsingRabbitMq((context, cfg) =>
+                {
+                    cfg.Host(rabbitmqConfig.Server, h =>
+                    {
+                        h.Username(rabbitmqConfig.Username);
+                        h.Password(rabbitmqConfig.Password);
+                    });
+                    cfg.ConfigureEndpoints(context);
+                    cfg.Exclusive = false;
+                    cfg.Durable = true;
+                });
+            });
+
+            //builder.Services.AddSingleton(rabbitmqConfig);
+            //builder.Services.AddScoped<IRabbitMQService,RabbitMQService>();
 
 
             var app = builder.Build();

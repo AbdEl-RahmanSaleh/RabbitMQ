@@ -1,52 +1,42 @@
-﻿using Microsoft.Extensions.Configuration;
-using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
+﻿using MassTransit;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using Shared.Configurations;
-using System.Text;
-
 namespace Consumer
 {
     internal class Program
     {
         static void Main(string[] args)
         {
+            var builder = Host.CreateDefaultBuilder(args)
+                .ConfigureAppConfiguration((context, config) =>
+                {
+                    config.SetBasePath(AppContext.BaseDirectory)
+                    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+                });
 
-            var configuration = new ConfigurationBuilder()
-                .SetBasePath(AppContext.BaseDirectory)
-                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true).Build();
-
-            var rabbitmqConfig = configuration.GetSection(nameof(RabbitMQConfiguration)).Get<RabbitMQConfiguration>();
-
-            var factory = new ConnectionFactory()
+            builder.ConfigureServices((hostContext, services) =>
             {
-                HostName = rabbitmqConfig.Server,
-                UserName = rabbitmqConfig.Username,
-                Password = rabbitmqConfig.Password,
-            };
+                var rabbitMqConfiguration = hostContext.Configuration.GetSection(nameof(RabbitMQConfiguration)).Get<RabbitMQConfiguration>();
+                services.AddMassTransit(x =>
+                {
+                    x.AddConsumer<DemoConsumer>()
+                        .Endpoint(e => e.Name = rabbitMqConfiguration.QueueName);
+                    x.UsingRabbitMq((context, cfg) =>
+                    {
+                        cfg.Host(rabbitMqConfiguration.Server, h =>
+                        {
+                            h.Username(rabbitMqConfiguration.Username);
+                            h.Password(rabbitMqConfiguration.Password);
+                        });
+                        cfg.ConfigureEndpoints(context);
+                        cfg.Exclusive = false;
+                    });
+                });
+            });
 
 
-            using var connection = factory.CreateConnection();
-            using var channel = connection.CreateModel();
-
-            channel.QueueDeclare(queue: rabbitmqConfig.QueueName,
-                                           durable: false,
-                                           exclusive: false,
-                                           autoDelete: false,
-                                           arguments: null);
-
-            var consumer = new EventingBasicConsumer(channel);
-
-            consumer.Received += (sender, args) =>
-            {
-                var body = args.Body.ToArray();
-                var message = Encoding.UTF8.GetString(body);
-                Console.WriteLine($"Message Received : {message}");
-
-            };
-            channel.BasicConsume(queue:rabbitmqConfig.QueueName , autoAck : true,consumer:consumer);
-
-            Console.ReadLine();
-
+            builder.Build().Run();
         }
     }
 }
